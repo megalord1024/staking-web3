@@ -214,12 +214,12 @@ export const Board = () => {
       return;
     }
 
-    if (stakeAmount === 0) {
+    if (stakeAmount == 0) {
       alert("Input staking amount");
       return;
     }
 
-    if (duration === 0) {
+    if (duration == 0) {
       alert("Input duration in months");
       return;
     }
