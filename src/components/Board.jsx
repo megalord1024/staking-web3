@@ -452,22 +452,22 @@ export const Board = () => {
             <thead className="text-xs text-gray-900 uppercase bg-gray-200 text-center">
               <tr>
                 <th scope="col" className="px-6 py-3">
-                    No
+                  No
                 </th>
                 <th scope="col" className="px-6 py-3">
-                    Staked Amount
+                  Staked Amount
                 </th>
                 <th scope="col" className="px-6 py-3">
-                    Start Time
+                  Start Time
                 </th>
                 <th scope="col" className="px-6 py-3">
-                    End Time
+                  End Time
                 </th>
                 <th scope="col" className="px-6 py-3">
-                    Duration
+                  Duration
                 </th>
                 <th scope="col" className="px-6 py-3">
-                    Reward
+                  Reward
                 </th>
                 <th scope="col" className="px-6 py-3"></th>
               </tr>
@@ -478,26 +478,34 @@ export const Board = () => {
                   return (
                     <tr className="bg-white border-b text-center font-medium text-gray-900 whitespace-nowrap" key={index}>
                       <td className="px-6 py-3">
-                          { index + 1 }
+                        { index + 1 }
                       </td>
                       <td className="px-6 py-3">
-                          { formatUnits(item.amount, decimals) } {symbol}
+                        { formatUnits(item.amount, decimals) } {symbol}
                       </td>
                       <td className="px-6 py-3">
-                          { convertDate(item.lockOn) }
+                        { convertDate(item.lockOn) }
                       </td>
                       <td className="px-6 py-3">
-                          { convertDate(item.lockEnd) }
+                        { convertDate(item.lockEnd) }
                       </td>
                       <td className="px-6 py-3">
-                          { Math.round((Number(item.lockEnd) - Number(item.lockOn)) / (30 * 86400)) } Months
+                        { Math.round((Number(item.lockEnd) - Number(item.lockOn)) / (30 * 86400)) } Months
                       </td>
                       <td className="px-6 py-3">
-                          { formatUnits(item.rewards, decimals) } {symbol}
+                        { formatUnits(item.rewards, decimals) } {symbol}
                       </td>
                       <td className="px-6 py-3">
-                          <button className='py-1 px-3 bg-red-700 hover:bg-red-500 rounded text-white text-xs' onClick={() => withdrawStake(index)}>Withdraw</button>
-                          <button className='ml-1 py-1 px-3 bg-green-700 hover:bg-green-500 rounded text-white text-xs' onClick={() => getRewards(index)}>Rewards</button>
+                        {
+                          Number(item.amount) > 0 ? (
+                            <button className='py-1 px-3 bg-red-700 hover:bg-red-500 rounded text-white text-xs' onClick={() => withdrawStake(index)}>Withdraw</button>
+                          ) : <></>
+                        }
+                        {
+                          Number(item.rewards) > 0 ? (
+                            <button className='ml-1 py-1 px-3 bg-green-700 hover:bg-green-500 rounded text-white text-xs' onClick={() => getRewards(index)}>Rewards</button>
+                          ) : <></>
+                        }
                       </td>
                     </tr>
                   )
