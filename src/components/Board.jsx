@@ -16,6 +16,12 @@ export const Board = () => {
   const [ decimals, setDecimals ] = useState(0);
   const [ symbol, setSymbol ] = useState('');
 
+  const [ claimContractOwner, setClaimContractOwner ] = useState('');
+  const [ claimStart, setClaimStart ] = useState('');
+  const [ updateClaimStart, setUpdateClaimStart ] = useState('');
+  const [ claimInfoAmount, setClaimInfoAmount ] = useState('');
+  const [ claimInfoAddress, setClaimInfoAddress ] = useState('');
+  const [ claimAmount, setClaimAmount ] = useState('');
   const [ claimableAmount, setClaimableAmount ] = useState('');
   const [ stakeFromClaimingAmount, setStakeFromClaimingAmount ] = useState('');
   const [ durationFromClaiming, setDurationFromClaiming ] = useState('');
@@ -37,6 +43,8 @@ export const Board = () => {
 
     getStakingEnabled();
     getTokenDecimals();
+    getClaimStart();
+    getClaimContractOwner();
   }, [isConnected]);
 
   // get token balance, claimable amount
@@ -77,6 +85,26 @@ export const Board = () => {
       setTokenBalance(formatUnits(balance, decimals));
   }
 
+  async function getClaimContractOwner() {
+    const ethersProvider = new BrowserProvider(walletProvider);
+    const signer = await ethersProvider.getSigner();
+
+    const ClaimingContract = new Contract(ClaimingAddress, ClaimingJSON.abi, signer);
+    const owner = await ClaimingContract.owner();
+
+    setClaimContractOwner(owner);
+  }
+
+  async function getClaimStart() {
+    const ethersProvider = new BrowserProvider(walletProvider);
+    const signer = await ethersProvider.getSigner();
+
+    const ClaimingContract = new Contract(ClaimingAddress, ClaimingJSON.abi, signer);
+    const claimStart = await ClaimingContract.claimStart();
+    
+    setClaimStart(claimStart);
+  }
+
   async function getStakingEnabled() {
     const ethersProvider = new BrowserProvider(walletProvider);
     const signer = await ethersProvider.getSigner();
@@ -91,10 +119,10 @@ export const Board = () => {
 
     const ethersProvider = new BrowserProvider(walletProvider);
     const signer = await ethersProvider.getSigner();
+    const StakingContract = new Contract(StakingAddress, StakingJSON.abi, signer);
 
     // The Contract object
     try {
-      const StakingContract = new Contract(StakingAddress, StakingJSON.abi, signer);
       const data = await StakingContract.getStakeInfoArray(address);
       if (data.length > 0) {
         setStakingArray(data);
@@ -103,6 +131,37 @@ export const Board = () => {
       }
     } catch (error) {
       alert("Failed to get staking info");
+      console.log(error);
+    }
+  }
+
+  async function claimToken() {
+    if (!isConnected) {
+      alert("Connect the wallet please");
+      return;
+    }
+
+    if (claimAmount == 0) {
+      alert("Input amount to claim");
+      return;
+    }
+
+    const ethersProvider = new BrowserProvider(walletProvider);
+    const signer = await ethersProvider.getSigner();
+    const DECIMAL = Math.pow(Number(10), Number(decimals));
+    let amount = Number(claimAmount) * DECIMAL;
+
+    try {
+      const ClaimingContract = new Contract(ClaimingAddress, ClaimingJSON.abi, signer);
+      await ClaimingContract.claim(address, amount.toString());
+
+      getClaimableAmount();
+      getTokenBalance();
+    } catch (error) {
+      let message = error;
+      if (error.reason) message = error.reason;
+
+      alert(message);
       console.log(error);
     }
   }
@@ -185,7 +244,107 @@ export const Board = () => {
     }
   }
 
+  async function withdrawStake(index) {
+    console.log(1);
+    if (!isConnected) return;
+
+    const ethersProvider = new BrowserProvider(walletProvider);
+    const signer = await ethersProvider.getSigner();
+    const StakingContract = new Contract(StakingAddress, StakingJSON.abi, signer);
+
+    try {
+      await StakingContract.withdraw(index);
+
+      getTokenBalance();
+      getStakingArray();
+    } catch(error) {
+      let message = error;
+      if (error.reason) message = error.reason;
+
+      alert(message);
+      console.log(error);
+    }
+  }
+
+  async function getRewards(index) {
+    if (!isConnected) return;
+
+    const ethersProvider = new BrowserProvider(walletProvider);
+    const signer = await ethersProvider.getSigner();
+    const StakingContract = new Contract(StakingAddress, StakingJSON.abi, signer);
+
+    try {
+      await StakingContract.claimRewards(index);
+
+      getTokenBalance();
+      getStakingArray();
+    } catch(error) {
+      let message = error;
+      if (error.reason) message = error.reason;
+
+      alert(message);
+      console.log(error);
+    }
+  }
+
+  async function updateClaimStartDate() {
+    const data = Math.floor(new Date(updateClaimStart).getTime() / 1000);
+    
+    const ethersProvider = new BrowserProvider(walletProvider);
+    const signer = await ethersProvider.getSigner();
+
+    try {
+      const ClaimingContract = new Contract(ClaimingAddress, ClaimingJSON.abi, signer);
+      await ClaimingContract.setClaimStart(data);
+
+      getClaimStart();
+    } catch (error) {
+      let message = error;
+      if (error.reason) message = error.reason;
+
+      alert(message);
+      console.log(error);
+    }
+  }
+
+  async function setClaimInfo() {
+    if (!isConnected) {
+      alert("Please connect wallet");
+      return;
+    }
+    
+    const ethersProvider = new BrowserProvider(walletProvider);
+    const signer = await ethersProvider.getSigner();
+
+    try {
+      const ClaimingContract = new Contract(ClaimingAddress, ClaimingJSON.abi, signer);
+      const DECIMAL = Math.pow(Number(10), Number(decimals));
+      let amount = Number(claimInfoAmount) * DECIMAL;
+      await ClaimingContract.setClaim(claimInfoAddress, amount.toString());
+
+      getClaimableAmount();
+    } catch (error) {
+      let message = error;
+      if (error.reason) message = error.reason;
+
+      alert(message);
+      console.log(error);
+    }
+  }
+
+  function claimStarted() {
+    if (claimStart == 0) return false;
+
+    const claimStartDate = new Date(Number(claimStart) * 1000);
+
+    const currentDate = new Date();
+
+    return currentDate >= claimStartDate;
+  }
+
   function convertDate(x) {
+    if (x == 0) return 'Not defined yet';
+
     x = new Date(Number(x) * 1000);
     const date = x.getDate().toString().padStart(2, 0);
     const month = x.getMonth().toString().padStart(2, 0);
@@ -201,7 +360,27 @@ export const Board = () => {
     <main className="py-12 px-24">
       <div>
         <div className='flex items-center'>
+          <div className={(claimStarted() ? `bg-green-800`:`bg-red-800`)+` rounded-full w-4 h-4 mr-3`}></div>
+          { claimStarted() ? <span className="text-lg font-bold">Claiming is enabled.</span> : <span className="text-lg font-bold">Claiming is Disabled</span> }
+          <span className="mx-4">|</span>
+          <div>Claiming is available from: <span className="font-bold">{convertDate(claimStart)}</span></div>
+        </div>
+        <div className='flex items-center mt-4'>
           <div>Claimable Amount: <span className="font-bold">{claimableAmount}</span> {symbol}</div>
+        </div>
+        <div className='flex mt-4'>
+          <div>
+            <label className="block mb-2 text-sm font-medium text-gray-900">Claim Amount</label>
+            <div className='flex'>
+              <input
+                type = "number"
+                className="block w-64 p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500"
+                onChange={e => setClaimAmount(e.target.value)}
+                placeholder='Enter the amount of token to claim'
+              />
+              <button className="ml-4 py-2 px-4 bg-blue-700 hover:bg-blue-500 rounded text-white" onClick={claimToken}>Claim</button>
+            </div>
+          </div>
         </div>
         <div className='flex mt-4'>
           <div>
@@ -290,13 +469,14 @@ export const Board = () => {
                 <th scope="col" className="px-6 py-3">
                     Reward
                 </th>
+                <th scope="col" className="px-6 py-3"></th>
               </tr>
             </thead>
             <tbody>
               {
                 stakingArray.length > 0 ? stakingArray.map((item, index) => {
                   return (
-                    <tr className="bg-white border-b text-center font-medium text-gray-900 whitespace-nowrap">
+                    <tr className="bg-white border-b text-center font-medium text-gray-900 whitespace-nowrap" key={index}>
                       <td className="px-6 py-3">
                           { index + 1 }
                       </td>
@@ -315,6 +495,10 @@ export const Board = () => {
                       <td className="px-6 py-3">
                           { formatUnits(item.rewards, decimals) } {symbol}
                       </td>
+                      <td className="px-6 py-3">
+                          <button className='py-1 px-3 bg-red-700 hover:bg-red-500 rounded text-white text-xs' onClick={() => withdrawStake(index)}>Withdraw</button>
+                          <button className='ml-1 py-1 px-3 bg-green-700 hover:bg-green-500 rounded text-white text-xs' onClick={() => getRewards(index)}>Rewards</button>
+                      </td>
                     </tr>
                   )
                 }) : <tr><td colSpan="6" className="text-lg text-gray-900 text-center py-2 border-b-2">There is no data</td></tr>
@@ -323,6 +507,53 @@ export const Board = () => {
           </table>
         </div>
       </div>
+      {
+        claimContractOwner != '' && claimContractOwner == address ? (
+          <>
+            <hr className="my-5" />
+            <div class="text-lg font-bold my-4">Claiming Contract Owner Functions</div>
+            <div>
+              <div className='flex mt-4'>
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-900">Set Claim Start</label>
+                  <div className='flex'>
+                    <input
+                      className="block w-64 p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500"
+                      onChange={e => setUpdateClaimStart(e.target.value)}
+                      placeholder='YYYY-MM-DD HH:MI:SS'
+                    />
+                    <button className="ml-4 py-2 px-4 bg-blue-700 hover:bg-blue-500 rounded text-white" onClick={updateClaimStartDate}>Update Claim Start</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+        <div className='flex mt-4'>
+          <div>
+            <label className="block mb-2 text-sm font-medium text-gray-900">Address to set claim info</label>
+            <input
+              type="text"
+              className="block w-64 p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500"
+              onChange={e => setClaimInfoAddress(e.target.value)}
+              placeholder="Enter the address"
+            />
+          </div>
+          <div className='ml-2'>
+            <label className="block mb-2 text-sm font-medium text-gray-900">Amount to set claim info</label>
+            <div className='flex'>
+              <input
+                type="number"
+                className="block w-64 p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500"
+                onChange={e => setClaimInfoAmount(e.target.value)}
+                placeholder="Enter the amount"
+              />
+              <button className="ml-4 py-2 px-4 bg-blue-700 hover:bg-blue-500 rounded text-white" onClick={setClaimInfo}>Set Claim Info</button>
+            </div>
+          </div>
+        </div>
+          </>
+        ): <></>
+      }
     </main>
   )
 }
