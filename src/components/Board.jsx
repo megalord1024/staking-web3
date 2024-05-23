@@ -130,7 +130,10 @@ export const Board = () => {
         setStakingArray([]);
       }
     } catch (error) {
-      alert("Failed to get staking info");
+      let message = error;
+      if (error.reason) message = error.reason;
+
+      alert(message);
       console.log(error);
     }
   }
@@ -197,7 +200,10 @@ export const Board = () => {
       getClaimableAmount();
       getStakingArray();
     } catch (error) {
-      alert(error);
+      let message = error;
+      if (error.reason) message = error.reason;
+
+      alert(message);
       console.log(error);
     }
   }
@@ -240,7 +246,11 @@ export const Board = () => {
       setStakeAmount('');
       setDuration(0);
     } catch (error) {
-      alert(error);
+      let message = error;
+      if (error.reason) message = error.reason;
+
+      alert(message);
+      console.log(error);
     }
   }
 
