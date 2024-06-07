@@ -2,6 +2,7 @@ import {
   createWeb3Modal,
   defaultConfig,
 } from '@web3modal/ethers/react'
+import { Outlet, Link } from "react-router-dom";
 
 // 1. Get projectId
 const projectId = "a627aa841f7924b83dfd55ecfae12ea3"
@@ -57,13 +58,16 @@ export const Header = () => {
   return(
     <nav className="bg-white w-full px-12 text-black border-b-2 border-black">
       <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-3">
-        <div className="hidden w-full md:block md:w-auto" id="navbar-default">
+        <nav className="hidden w-full md:block md:w-auto" id="navbar-default">
           <ul className="font-medium flex flex-col p-4 md:p-0 mt-4 rounded-lg md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0">
             <li>
-              <a href="#" className="block py-2 px-3 md:hover:text-blue-700" aria-current="page">Staking & Claiming</a>
+              <a href="/" className="block py-2 px-3 md:hover:text-blue-700" aria-current="page">Staking & Claiming</a>
+            </li>
+            <li>
+              <a href="/liquidity" className="block py-2 px-3 md:hover:text-blue-700" aria-current="page">Liquidity Mining</a>
             </li>
           </ul>
-        </div>
+        </nav>
         <button className="flex items-center space-x-3 rtl:space-x-reverse py-2 px-3">
           <w3m-button size={undefined} label={undefined} loadingLabel={undefined} disabled={undefined} balance={undefined} />
         </button>
