@@ -552,29 +552,29 @@ export const Claiming = () => {
               </div>
             </div>
             
-        <div className='flex mt-4'>
-          <div>
-            <label className="block mb-2 text-sm font-medium text-gray-900">Address to set claim info</label>
-            <input
-              type="text"
-              className="block w-64 p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500"
-              onChange={e => setClaimInfoAddress(e.target.value)}
-              placeholder="Enter the address"
-            />
-          </div>
-          <div className='ml-2'>
-            <label className="block mb-2 text-sm font-medium text-gray-900">Amount to set claim info</label>
-            <div className='flex'>
-              <input
-                type="number"
-                className="block w-64 p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500"
-                onChange={e => setClaimInfoAmount(e.target.value)}
-                placeholder="Enter the amount"
-              />
-              <button className="ml-4 py-2 px-4 bg-blue-700 hover:bg-blue-500 rounded text-white" onClick={setClaimInfo}>Set Claim Info</button>
+            <div className='flex mt-4'>
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-900">Address to set claim info</label>
+                <input
+                  type="text"
+                  className="block w-64 p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500"
+                  onChange={e => setClaimInfoAddress(e.target.value)}
+                  placeholder="Enter the address"
+                />
+              </div>
+              <div className='ml-2'>
+                <label className="block mb-2 text-sm font-medium text-gray-900">Amount to set claim info</label>
+                <div className='flex'>
+                  <input
+                    type="number"
+                    className="block w-64 p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500"
+                    onChange={e => setClaimInfoAmount(e.target.value)}
+                    placeholder="Enter the amount"
+                  />
+                  <button className="ml-4 py-2 px-4 bg-blue-700 hover:bg-blue-500 rounded text-white" onClick={setClaimInfo}>Set Claim Info</button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
           </>
         ): <></>
       }
