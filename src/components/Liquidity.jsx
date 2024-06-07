@@ -13,7 +13,8 @@ import LiquidityJSON from '../artifacts/LiquidityMiningABI.json';
 const TokenAddress = '0x8c06e9fb6C8254917a13133F490BBd6680408948';
 const StakingAddress = '0x671Fe65F0721574CFc3594CCf91ACB7A8a55433e';
 const ClaimingAddress = '0x89b77621559290D9C0535A142A29027f7bB31BAC';
-const LiquidityAddress = '0xfE9BA5d5fb2909Fffec58e928437FD52DC05ffd0';
+// const LiquidityAddress = '0xfE9BA5d5fb2909Fffec58e928437FD52DC05ffd0';
+const LiquidityAddress = '0xe7986D07D865208ABb4fdE4bCE25017CFFD546ce';
 
 
 export const Liquidity = () => {
@@ -32,6 +33,7 @@ export const Liquidity = () => {
 
   const [ depositAmount, setDepositAmount ] = useState('');
   const [ totalDepositAmount, setTotalDepositAmount ] = useState('');
+  const [ userDepositsArray, setUserDepositsArray ] = useState([]);
 
   // get staking enabled status, token decimals
   useEffect(() => {
@@ -42,6 +44,11 @@ export const Liquidity = () => {
     getLiquidityContractOwner();
     getUserTotalDeposit();
   }, [isConnected]);
+
+  // get deposits array
+  useEffect(() => {
+    getUserDepositsArray();
+  }, [isConnected, address, chainId]);
 
   async function getTokenDecimals() {
     const ethersProvider = new BrowserProvider(walletProvider);
@@ -95,6 +102,7 @@ export const Liquidity = () => {
   }
 
   async function getUserTotalDeposit() {
+    console.log(11);
     const ethersProvider = new BrowserProvider(walletProvider);
     const signer = await ethersProvider.getSigner();
 
@@ -102,6 +110,32 @@ export const Liquidity = () => {
     const totalAmount = await LiquidityContract.getUserTotalDeposit(address);
 
     setTotalDepositAmount(formatUnits(totalAmount));
+  }
+
+  async function getUserDepositsArray() {
+    console.log(1);
+    if (!isConnected) return;
+    console.log(2);
+
+    const ethersProvider = new BrowserProvider(walletProvider);
+    const signer = await ethersProvider.getSigner();
+    const LiquidityContract = new Contract(LiquidityAddress, LiquidityJSON.abi, signer);
+
+    // The Contract object
+    try {
+      const data = await LiquidityContract.getUserDepositsArray(address);
+      if (data.length > 0) {
+        setUserDepositsArray(data);
+      } else {
+        setUserDepositsArray([]);
+      }
+    } catch (error) {
+      let message = error;
+      if (error.reason) message = error.reason;
+
+      alert(message);
+      console.log(error);
+    }
   }
 
   async function setRewardStates() {
@@ -135,6 +169,7 @@ export const Liquidity = () => {
       });
 
       getUserTotalDeposit();
+      getUserDepositsArray();
     } catch (error) {
       let message = error;
       if (error.reason) message = error.reason;
