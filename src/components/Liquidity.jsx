@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers/react';
-import { BrowserProvider, Contract, formatUnits } from 'ethers';
+import { BrowserProvider, Contract, formatUnits, formatEther, parseEther } from 'ethers';
 import TokenJSON from '../artifacts/TokenABI.json';
 import ClaimingJSON from '../artifacts/ClaimingABI.json';
 import StakingJSON from '../artifacts/StakingABI.json';
@@ -30,6 +30,9 @@ export const Liquidity = () => {
   const [ rewardPeriod, setRewardPeriod ] = useState('');
   const [ rewardTotalAmount, setRewardTotalAmount ] = useState('');
 
+  const [ depositAmount, setDepositAmount ] = useState('');
+  const [ totalDepositAmount, setTotalDepositAmount ] = useState('');
+
   // get staking enabled status, token decimals
   useEffect(() => {
     if (!isConnected) return;
@@ -37,6 +40,7 @@ export const Liquidity = () => {
     getDepositStart();
     getTokenDecimals();
     getLiquidityContractOwner();
+    getUserTotalDeposit();
   }, [isConnected]);
 
   async function getTokenDecimals() {
@@ -90,6 +94,16 @@ export const Liquidity = () => {
     }
   }
 
+  async function getUserTotalDeposit() {
+    const ethersProvider = new BrowserProvider(walletProvider);
+    const signer = await ethersProvider.getSigner();
+
+    const LiquidityContract = new Contract(LiquidityAddress, LiquidityJSON.abi, signer);
+    const totalAmount = await LiquidityContract.getUserTotalDeposit(address);
+
+    setTotalDepositAmount(formatUnits(totalAmount));
+  }
+
   async function setRewardStates() {
     const rewardStartDate = Math.floor(new Date(updateRewardStartDate).getTime() / 1000);
     
@@ -101,6 +115,26 @@ export const Liquidity = () => {
       await LiquidityContract.setRewardStates(rewardStartDate, rewardPeriod, rewardTotalAmount);
 
       getDepositStart();
+    } catch (error) {
+      let message = error;
+      if (error.reason) message = error.reason;
+
+      alert(message);
+      console.log(error);
+    }
+  }
+
+  async function depositETH() {
+    const ethersProvider = new BrowserProvider(walletProvider);
+    const signer = await ethersProvider.getSigner();
+
+    try {
+      const LiquidityContract = new Contract(LiquidityAddress, LiquidityJSON.abi, signer);
+      await LiquidityContract.depositETH({
+        value: parseEther(depositAmount)
+      });
+
+      getUserTotalDeposit();
     } catch (error) {
       let message = error;
       if (error.reason) message = error.reason;
@@ -142,12 +176,29 @@ export const Liquidity = () => {
             <span className="mx-4">|</span>
           <div>Deposit is available from: <span className="font-bold">{convertDate(depositStart)}</span></div>
         </div>
+        <div className='flex items-center mt-4'>
+          <div>Deposited Amount: <span className="font-bold">{totalDepositAmount}</span> ETH</div>
+        </div>
+        <div className='flex mt-4'>
+          <div>
+            <label className="block mb-2 text-sm font-medium text-gray-900">Deposit Amount</label>
+            <div className='flex'>
+              <input
+                type = "number"
+                className="block w-64 p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500"
+                onChange={e => setDepositAmount(e.target.value)}
+                placeholder='Enter the amount of token to claim'
+              />
+              <button className="ml-4 py-2 px-4 bg-blue-700 hover:bg-blue-500 rounded text-white" onClick={depositETH}>Deposit</button>
+            </div>
+          </div>
+        </div>
       </div>
       {
         liquidityContractOwner != '' && liquidityContractOwner == address ? (
           <>
             <hr className="my-5" />
-            <div class="text-lg font-bold my-4">LiquidityMining Contract Owner Functions</div>
+            <div className="text-lg font-bold my-4">LiquidityMining Contract Owner Functions</div>
             <div>
               <div className='flex mt-4'>
                 <div>
