@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers/react';
 import { BrowserProvider, Contract, formatUnits, formatEther, parseEther } from 'ethers';
+import BigNumber from 'bignumber.js';
 import TokenJSON from '../artifacts/TokenABI.json';
 import ClaimingJSON from '../artifacts/ClaimingABI.json';
 import StakingJSON from '../artifacts/StakingABI.json';
@@ -34,6 +35,9 @@ export const Liquidity = () => {
   const [ depositAmount, setDepositAmount ] = useState('');
   const [ totalDepositAmount, setTotalDepositAmount ] = useState('');
   const [ userDepositsArray, setUserDepositsArray ] = useState([]);
+  const [ totalDeposits, setTotalDeposits ] = useState(0);
+  const [ claimingTokenBalance, setClaimingTokenBalance ] = useState(0);
+  const [ pairAddress, setPairAddress ] = useState('');
 
   // get staking enabled status, token decimals
   useEffect(() => {
@@ -43,7 +47,12 @@ export const Liquidity = () => {
     getTokenDecimals();
     getLiquidityContractOwner();
     getUserTotalDeposit();
+    getTotalDepositAmount();
   }, [isConnected]);
+
+  useEffect(() => {
+    getClaimingTokenBalance();
+  }, [isConnected, decimals]);
 
   // get deposits array
   useEffect(() => {
@@ -135,6 +144,46 @@ export const Liquidity = () => {
     }
   }
 
+  async function getTotalDepositAmount() {
+    if (!isConnected) return;
+
+    const ethersProvider = new BrowserProvider(walletProvider);
+    const signer = await ethersProvider.getSigner();
+    const LiquidityContract = new Contract(LiquidityAddress, LiquidityJSON.abi, signer);
+
+    try {
+      const total = await LiquidityContract.totalDeposits();
+      
+      setTotalDeposits(formatUnits(total));
+    } catch (error) {
+      let message = error;
+      if (error.reason) message = error.reason;
+
+      alert(message);
+      console.log(error);
+    }
+  }
+
+  async function getClaimingTokenBalance() {
+    if (!isConnected) return;
+
+    const ethersProvider = new BrowserProvider(walletProvider);
+    const signer = await ethersProvider.getSigner();
+    const TokenContract = new Contract(TokenAddress, TokenJSON.abi, signer);
+
+    try {
+      const balance = await TokenContract.balanceOf(ClaimingAddress);
+
+      setClaimingTokenBalance(formatUnits(balance, decimals));
+    } catch (error) {
+      let message = error;
+      if (error.reason) message = error.reason;
+
+      alert(message);
+      console.log(error);
+    }
+  }
+
   async function setRewardStates() {
     const rewardStartDate = Math.floor(new Date(updateRewardStartDate).getTime() / 1000);
     
@@ -195,6 +244,10 @@ export const Liquidity = () => {
     }
   }
 
+  async function listLiquidity() {
+
+  }
+
   function depositStarted() {
     if (depositStart == 0) return false;
 
@@ -228,7 +281,7 @@ export const Liquidity = () => {
           <div>Deposit is available from: <span className="font-bold">{convertDate(depositStart)}</span></div>
         </div>
         <div className='flex items-center mt-4'>
-          <div>Deposited Amount: <span className="font-bold">{totalDepositAmount}</span> ETH</div>
+          <div>Deposited Amount: <span class="bg-green-100 text-green-800 text-sm font-medium me-2 px-1.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300 ml-2">{totalDepositAmount} ETH</span></div>
         </div>
         <div className='flex mt-4'>
           <div>
@@ -352,6 +405,18 @@ export const Liquidity = () => {
                   <button className="ml-4 py-2 px-4 bg-blue-700 hover:bg-blue-500 rounded text-white" onClick={setRewardStates}>Set Reward States</button>
                 </div>
               </div>
+            </div>
+            <div className='mt-6'>
+              <div>Total Deposit ETH Amount: <span class="bg-green-100 text-green-800 text-sm font-medium me-2 px-1.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300 ml-2">{totalDeposits} ETH</span></div>
+              <div>Claiming Contract Token Balance: <span class="bg-green-100 text-green-800 text-sm font-medium me-2 px-1.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300 ml-2">{claimingTokenBalance} {symbol}</span></div>
+            </div>
+            <div className='flex mt-4'>
+              <input
+                className="block w-64 p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500"
+                onChange={e => setPairAddress(e.target.value)}
+                placeholder='Pool Address (0x..)'
+              />
+              <button type="button" class="text-white bg-gradient-to-r from-purple-500 to-pink-500 hover:bg-gradient-to-l focus:ring-4 focus:outline-none focus:ring-purple-200 dark:focus:ring-purple-800 font-medium rounded-lg text-md px-4 py-2.5 text-center ml-2" onClick={listLiquidity}>List Liquidity</button>
             </div>
           </>
         ): <></>
