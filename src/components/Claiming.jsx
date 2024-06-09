@@ -363,7 +363,7 @@ export const Claiming = () => {
 
     x = new Date(Number(x) * 1000);
     const date = x.getDate().toString().padStart(2, 0);
-    const month = x.getMonth().toString().padStart(2, 0);
+    const month = (x.getMonth()+1).toString().padStart(2, 0);
     const year = x.getFullYear().toString();
 
     const hours = x.getHours().toString().padStart(2, 0);
@@ -514,12 +514,12 @@ export const Claiming = () => {
                       <td className="px-6 py-3">
                         {
                           Number(item.amount) > 0 ? (
-                            <button className='py-1 px-3 bg-red-700 hover:bg-red-500 rounded text-white text-xs' onClick={() => withdrawStake(index)}>Withdraw</button>
+                            <button className='text-white bg-gradient-to-br from-pink-500 to-orange-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-pink-200 dark:focus:ring-pink-800 font-medium rounded-lg text-xs px-2 py-1 text-center' onClick={() => withdrawStake(index)}>Withdraw</button>
                           ) : <></>
                         }
                         {
                           Number(item.rewards) > 0 ? (
-                            <button className='ml-1 py-1 px-3 bg-green-700 hover:bg-green-500 rounded text-white text-xs' onClick={() => getRewards(index)}>Rewards</button>
+                            <button className='text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-xs px-2 py-1 text-center ml-1' onClick={() => getRewards(index)}>Rewards</button>
                           ) : <></>
                         }
                       </td>
@@ -535,7 +535,7 @@ export const Claiming = () => {
         claimContractOwner != '' && claimContractOwner == address ? (
           <>
             <hr className="my-5" />
-            <div class="text-lg font-bold my-4">Claiming Contract Owner Functions</div>
+            <div className="text-lg font-bold my-4">Claiming Contract Owner Functions</div>
             <div>
               <div className='flex mt-4'>
                 <div>
