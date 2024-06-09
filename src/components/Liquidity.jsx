@@ -102,7 +102,6 @@ export const Liquidity = () => {
   }
 
   async function getUserTotalDeposit() {
-    console.log(11);
     const ethersProvider = new BrowserProvider(walletProvider);
     const signer = await ethersProvider.getSigner();
 
@@ -113,9 +112,7 @@ export const Liquidity = () => {
   }
 
   async function getUserDepositsArray() {
-    console.log(1);
     if (!isConnected) return;
-    console.log(2);
 
     const ethersProvider = new BrowserProvider(walletProvider);
     const signer = await ethersProvider.getSigner();
@@ -179,6 +176,25 @@ export const Liquidity = () => {
     }
   }
 
+  async function withdrawDeposit(index) {
+    const ethersProvider = new BrowserProvider(walletProvider);
+    const signer = await ethersProvider.getSigner();
+
+    try {
+      const LiquidityContract = new Contract(LiquidityAddress, LiquidityJSON.abi, signer);
+      await LiquidityContract.removeLiquidity(index);
+
+      await getUserTotalDeposit();
+      await getUserDepositsArray();
+    } catch (error) {
+      let message = error;
+      if (error.reason) message = error.reason;
+
+      alert(message);
+      console.log(error);
+    }
+  }
+
   function depositStarted() {
     if (depositStart == 0) return false;
 
@@ -193,7 +209,7 @@ export const Liquidity = () => {
 
     x = new Date(Number(x) * 1000);
     const date = x.getDate().toString().padStart(2, 0);
-    const month = x.getMonth().toString().padStart(2, 0);
+    const month = (x.getMonth()+1).toString().padStart(2, 0);
     const year = x.getFullYear().toString();
 
     const hours = x.getHours().toString().padStart(2, 0);
@@ -227,6 +243,62 @@ export const Liquidity = () => {
               <button className="ml-4 py-2 px-4 bg-blue-700 hover:bg-blue-500 rounded text-white" onClick={depositETH}>Deposit</button>
             </div>
           </div>
+        </div>        
+        <div className="mt-4">
+          <table className="w-full text-sm text-left rtl:text-right text-gray-400 dark:text-gray-400">
+            <thead className="text-xs text-gray-900 uppercase bg-gray-200 text-center">
+              <tr>
+                <th scope="col" className="px-6 py-3">
+                  No
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Deposit Amount
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Deposit Time
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Liquidity
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Status
+                </th>
+                <th scope="col" className="px-6 py-3"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                userDepositsArray.length > 0 ? userDepositsArray.map((item, index) => {
+                  return (
+                    <tr className="bg-white border-b text-center font-medium text-gray-900 whitespace-nowrap" key={index}>
+                      <td className="px-6 py-3">
+                        { index + 1 }
+                      </td>
+                      <td className="px-6 py-3">
+                        { formatUnits(item.amount, decimals) } ETH
+                      </td>
+                      <td className="px-6 py-3">
+                        { convertDate(item.depositOn) }
+                      </td>
+                      <td className="px-6 py-3">
+                        { formatUnits(item.liquidity, 18) } UNI-V2
+                      </td>
+                      <td className="px-6 py-3">
+                        { item.removed ? <span class="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Removed</span> : <span class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Active</span> }
+                      </td>
+                      <td className="px-6 py-3">
+                        {
+                          Number(item.amount) > 0 ? (
+                            <button className='text-white bg-gradient-to-br from-pink-500 to-orange-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-pink-200 dark:focus:ring-pink-800 font-medium rounded-lg text-xs px-2 py-1 text-center' onClick={() => withdrawDeposit(index)}>Withdraw</button>
+                          ) : <></>
+                        }
+                      </td>
+                    </tr>
+                  )
+                }) : <tr><td colSpan="7" className="text-lg text-gray-900 text-center py-2 border-b-2">There is no data</td></tr>
+              }
+            </tbody>
+          </table>
         </div>
       </div>
       {
