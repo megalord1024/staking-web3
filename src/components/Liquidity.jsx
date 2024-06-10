@@ -15,7 +15,8 @@ const TokenAddress = '0x8c06e9fb6C8254917a13133F490BBd6680408948';
 const StakingAddress = '0x671Fe65F0721574CFc3594CCf91ACB7A8a55433e';
 const ClaimingAddress = '0x89b77621559290D9C0535A142A29027f7bB31BAC';
 // const LiquidityAddress = '0xfE9BA5d5fb2909Fffec58e928437FD52DC05ffd0';
-const LiquidityAddress = '0xe7986D07D865208ABb4fdE4bCE25017CFFD546ce';
+// const LiquidityAddress = '0xe7986D07D865208ABb4fdE4bCE25017CFFD546ce';
+const LiquidityAddress = '0x636372c9aB49202Ce7A47E4f2CA52400C029E679';
 
 
 export const Liquidity = () => {
@@ -354,6 +355,10 @@ export const Liquidity = () => {
           </table>
         </div>
       </div>
+      <hr className="my-5" />
+      <div>
+        <div></div>
+      </div>
       {
         liquidityContractOwner != '' && liquidityContractOwner == address ? (
           <>
@@ -408,7 +413,7 @@ export const Liquidity = () => {
             </div>
             <div className='mt-6'>
               <div>Total Deposit ETH Amount: <span class="bg-green-100 text-green-800 text-sm font-medium me-2 px-1.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300 ml-2">{totalDeposits} ETH</span></div>
-              <div>Claiming Contract Token Balance: <span class="bg-green-100 text-green-800 text-sm font-medium me-2 px-1.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300 ml-2">{claimingTokenBalance} {symbol}</span></div>
+              <div className='mt-1'>Claiming Contract Token Balance: <span class="bg-green-100 text-green-800 text-sm font-medium me-2 px-1.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300 ml-2">{claimingTokenBalance} {symbol}</span></div>
             </div>
             <div className='flex mt-4'>
               <input
