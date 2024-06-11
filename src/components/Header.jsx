@@ -13,13 +13,6 @@ if (!projectId) {
 // 2. Set chains
 const chains = [
   {
-    chainId: 1,
-    name: 'Ethereum',
-    currency: 'ETH',
-    explorerUrl: 'https://etherscan.io',
-    rpcUrl: 'https://cloudflare-eth.com'
-  },
-  {
     chainId: 11155111,
     name: 'Sepolia',
     currency: 'ETH',
@@ -73,5 +66,5 @@ export const Header = () => {
         </button>
       </div>
     </nav>
-  );  
+  );
 }

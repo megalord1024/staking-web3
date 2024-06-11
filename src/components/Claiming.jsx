@@ -162,10 +162,14 @@ export const Claiming = () => {
 
     try {
       const ClaimingContract = new Contract(ClaimingAddress, ClaimingJSON.abi, signer);
-      await ClaimingContract.claim(address, amount.toString());
+      const trx = await ClaimingContract.claim(address, amount.toString());
 
-      getClaimableAmount();
-      getTokenBalance();
+      trx.wait().then(async receipt => {
+        if (receipt && receipt.status == 1) {
+          getClaimableAmount();
+          getTokenBalance();
+        }
+      })
     } catch (error) {
       let message = error;
       if (error.reason) message = error.reason;
@@ -198,13 +202,14 @@ export const Claiming = () => {
 
     try {
       const ClaimingContract = new Contract(ClaimingAddress, ClaimingJSON.abi, signer);
-      await ClaimingContract.stake(amount.toString(), durationFromClaiming);
+      const trx = await ClaimingContract.stake(amount.toString(), durationFromClaiming);
 
-      // setStakeFromClaimingAmount('');
-      // setDurationFromClaiming(0);
-
-      getClaimableAmount();
-      getStakingArray();
+      trx.wait().then(async receipt => {
+        if (receipt && receipt.status == 1) {
+          getClaimableAmount();
+          getStakingArray();          
+        }
+      });
     } catch (error) {
       let message = error;
       if (error.reason) message = error.reason;
@@ -269,10 +274,14 @@ export const Claiming = () => {
     const StakingContract = new Contract(StakingAddress, StakingJSON.abi, signer);
 
     try {
-      await StakingContract.withdraw(index);
+      const trx = await StakingContract.withdraw(index);
 
-      getTokenBalance();
-      getStakingArray();
+      trx.wait().then(async receipt => {
+        if (receipt && receipt.status == 1) {
+          getTokenBalance();
+          getStakingArray();
+        }
+      });
     } catch(error) {
       let message = error;
       if (error.reason) message = error.reason;
@@ -282,7 +291,7 @@ export const Claiming = () => {
     }
   }
 
-  async function getRewards(index) {
+  async function claimRewards(index) {
     if (!isConnected) return;
 
     const ethersProvider = new BrowserProvider(walletProvider);
@@ -290,10 +299,14 @@ export const Claiming = () => {
     const StakingContract = new Contract(StakingAddress, StakingJSON.abi, signer);
 
     try {
-      await StakingContract.claimRewards(index);
+      const trx = await StakingContract.claimRewards(index);
 
-      getTokenBalance();
-      getStakingArray();
+      trx.wait().then(async receipt => {
+        if (receipt && receipt.status) {
+          getTokenBalance();
+          getStakingArray();
+        }
+      });
     } catch(error) {
       let message = error;
       if (error.reason) message = error.reason;
@@ -311,9 +324,13 @@ export const Claiming = () => {
 
     try {
       const ClaimingContract = new Contract(ClaimingAddress, ClaimingJSON.abi, signer);
-      await ClaimingContract.setClaimStart(data);
+      const trx = await ClaimingContract.setClaimStart(data);
 
-      getClaimStart();
+      trx.wait().then(async receipt => {
+        if (receipt && receipt.status == 1) {
+          getClaimStart();
+        }
+      });
     } catch (error) {
       let message = error;
       if (error.reason) message = error.reason;
@@ -336,9 +353,13 @@ export const Claiming = () => {
       const ClaimingContract = new Contract(ClaimingAddress, ClaimingJSON.abi, signer);
       const DECIMAL = Math.pow(Number(10), Number(decimals));
       let amount = Number(claimInfoAmount) * DECIMAL;
-      await ClaimingContract.setClaim(claimInfoAddress, amount.toString());
+      const trx = await ClaimingContract.setClaim(claimInfoAddress, amount.toString());
 
-      getClaimableAmount();
+      trx.wait().then(async receipt => {
+        if (receipt && receipt.status == 1) {
+          getClaimableAmount();
+        }
+      });
     } catch (error) {
       let message = error;
       if (error.reason) message = error.reason;
@@ -519,7 +540,7 @@ export const Claiming = () => {
                         }
                         {
                           Number(item.rewards) > 0 ? (
-                            <button className='text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-xs px-2 py-1 text-center ml-1' onClick={() => getRewards(index)}>Rewards</button>
+                            <button className='text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-xs px-2 py-1 text-center ml-1' onClick={() => claimRewards(index)}>Rewards</button>
                           ) : <></>
                         }
                       </td>
