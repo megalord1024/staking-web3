@@ -185,6 +185,11 @@ export const Liquidity = () => {
     }
   }
 
+  async function getRewardStates() {
+    const ethersProvider = new BrowserProvider(walletProvider);
+    const signer = await ethersProvider.getSigner();
+  }
+
   async function setRewardStates() {
     const rewardStartDate = Math.floor(new Date(updateRewardStartDate).getTime() / 1000);
     
@@ -193,9 +198,13 @@ export const Liquidity = () => {
 
     try {
       const LiquidityContract = new Contract(LiquidityAddress, LiquidityJSON.abi, signer);
-      await LiquidityContract.setRewardStates(rewardStartDate, rewardPeriod, rewardTotalAmount);
+      const trx = await LiquidityContract.setRewardStates(rewardStartDate, rewardPeriod, rewardTotalAmount);
 
-      getDepositStart();
+      trx.wait().then(async receipt => {
+        if (receipt && receipt.status == 1) {
+          getRewardStates();
+        }
+      });
     } catch (error) {
       let message = error;
       if (error.reason) message = error.reason;
@@ -211,12 +220,16 @@ export const Liquidity = () => {
 
     try {
       const LiquidityContract = new Contract(LiquidityAddress, LiquidityJSON.abi, signer);
-      await LiquidityContract.depositETH({
+      const trx = await LiquidityContract.depositETH({
         value: parseEther(depositAmount)
       });
 
-      getUserTotalDeposit();
-      getUserDepositsArray();
+      trx.wait().then(async receipt => {
+        if (receipt && receipt.status == 1) {
+          getUserTotalDeposit();
+          getUserDepositsArray();
+        }
+      });
     } catch (error) {
       let message = error;
       if (error.reason) message = error.reason;
@@ -232,10 +245,14 @@ export const Liquidity = () => {
 
     try {
       const LiquidityContract = new Contract(LiquidityAddress, LiquidityJSON.abi, signer);
-      await LiquidityContract.removeLiquidity(index);
+      const trx = await LiquidityContract.removeLiquidity(index);
 
-      await getUserTotalDeposit();
-      await getUserDepositsArray();
+      trx.wait().then(async receipt => {
+        if (receipt && receipt.status == 1) {
+          getUserTotalDeposit();
+          getUserDepositsArray();
+        }
+      });
     } catch (error) {
       let message = error;
       if (error.reason) message = error.reason;
