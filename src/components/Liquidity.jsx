@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers/react';
-import { BrowserProvider, Contract, formatUnits, formatEther, parseEther } from 'ethers';
+import { BrowserProvider, Contract, formatUnits, parseEther, parseUnits } from 'ethers';
 import BigNumber from 'bignumber.js';
 import TokenJSON from '../artifacts/TokenABI.json';
 import ClaimingJSON from '../artifacts/ClaimingABI.json';
@@ -32,6 +32,9 @@ export const Liquidity = () => {
   const [ updateRewardStartDate, setUpdateRewardStartDate ] = useState('');
   const [ updateRewardPeriod, setUpdateRewardPeriod ] = useState('');
   const [ updateRewardTotalAmount, setUpdateRewardTotalAmount ] = useState('');
+  const [ rewardStartDate, setRewardStartDate ] = useState('');
+  const [ rewardPeriod, setRewardPeriod ] = useState('');
+  const [ rewardTotalAmount, setRewardTotalAmount ] = useState('');
 
   const [ depositAmount, setDepositAmount ] = useState('');
   const [ totalDepositAmount, setTotalDepositAmount ] = useState('');
@@ -49,6 +52,7 @@ export const Liquidity = () => {
     getLiquidityContractOwner();
     getUserTotalDeposit();
     getTotalDepositAmount();
+    getRewardStates();
   }, [isConnected]);
 
   useEffect(() => {
@@ -195,6 +199,9 @@ export const Liquidity = () => {
       const rewardPeriod = await LiquidityContract.rewardPeriod();
       const totalReward = await LiquidityContract.totalReward();
 
+      setRewardStartDate(Number(startDay) * 86400);
+      setRewardPeriod(rewardPeriod);
+      setRewardTotalAmount(totalReward);
     } catch (error) {
       let message = error;
       if (error.reason) message = error.reason;
@@ -205,14 +212,16 @@ export const Liquidity = () => {
   }
 
   async function setRewardStates() {
-    const rewardStartDate = Math.floor(new Date(updateRewardStartDate).getTime() / 1000);
+    const startDate = Math.floor(new Date(updateRewardStartDate).getTime() / 1000);
     
     const ethersProvider = new BrowserProvider(walletProvider);
     const signer = await ethersProvider.getSigner();
 
     try {
       const LiquidityContract = new Contract(LiquidityAddress, LiquidityJSON.abi, signer);
-      const trx = await LiquidityContract.setRewardStates(rewardStartDate, updateRewardPeriod, updateRewardTotalAmount);
+      const DECIMAL = Math.pow(Number(10), Number(decimals));
+      let amount = Number(updateRewardTotalAmount) * DECIMAL;
+      const trx = await LiquidityContract.setRewardStates(startDate, updateRewardPeriod, parseUnits(updateRewardTotalAmount, decimals));
 
       trx.wait().then(async receipt => {
         if (receipt && receipt.status == 1) {
@@ -289,6 +298,15 @@ export const Liquidity = () => {
     return currentDate >= depositStartDate;
   }
 
+  function rewardPeriodStarted() {
+    if (rewardStartDate == 0) return false;
+
+    const startDate = new Date(Number(rewardStartDate) * 1000);
+    const currentDate = new Date();
+
+    return currentDate >= startDate;
+  }
+
   function convertDate(x) {
     if (x == 0) return 'Not defined yet';
 
@@ -313,7 +331,7 @@ export const Liquidity = () => {
           <div>Deposit is available from: <span className="font-bold">{convertDate(depositStart)}</span></div>
         </div>
         <div className='flex items-center mt-4'>
-          <div>Deposited Amount: <span class="bg-green-100 text-green-800 text-sm font-medium me-2 px-1.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300 ml-2">{totalDepositAmount} ETH</span></div>
+          <div>Deposited Amount: <span className="bg-green-100 text-green-800 text-sm font-medium me-2 px-1.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300 ml-2">{totalDepositAmount} ETH</span></div>
         </div>
         <div className='flex mt-4'>
           <div>
@@ -369,7 +387,7 @@ export const Liquidity = () => {
                         { formatUnits(item.liquidity, 18) } UNI-V2
                       </td>
                       <td className="px-6 py-3">
-                        { item.removed ? <span class="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Removed</span> : <span class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Active</span> }
+                        { item.removed ? <span className="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Removed</span> : <span className="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Active</span> }
                       </td>
                       <td className="px-6 py-3">
                         {
@@ -388,7 +406,13 @@ export const Liquidity = () => {
       </div>
       <hr className="my-5" />
       <div>
-        <div></div>
+        <div className='flex items-center'>
+          <div className={(rewardPeriodStarted() ? `bg-green-800`:`bg-red-800`)+` rounded-full w-4 h-4 mr-3`}></div>
+          { rewardPeriodStarted() ? <span className="text-lg font-bold">Reward period is started.</span> : <span className="text-lg font-bold">Reward isn't started</span> }
+        </div>
+        <div className='mt-3'>Reward period starts from: <span className="font-bold">{convertDate(rewardStartDate)}</span></div>
+        <div className='mt-3'>Reward period ends at: <span className="font-bold">{convertDate(rewardStartDate + 86400 * Number(rewardPeriod))}</span></div>
+        <div className='mt-3'>Reward Total Amount: <span className="font-bold"> <span className="bg-green-100 text-green-800 text-sm font-medium me-2 px-1.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300 ml-2">{rewardTotalAmount > 0 ? formatUnits(rewardTotalAmount, decimals) : 0} {symbol}</span></span></div>
       </div>
       {
         liquidityContractOwner != '' && liquidityContractOwner == address ? (
@@ -414,7 +438,6 @@ export const Liquidity = () => {
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-900">Reward Start Time</label>
                 <input
-                  type="number"
                   className="block w-64 p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500"
                   onChange={e => setUpdateRewardStartDate(e.target.value)}
                   placeholder='YYYY-MM-DD HH:MI:SS'
@@ -443,8 +466,8 @@ export const Liquidity = () => {
               </div>
             </div>
             <div className='mt-6'>
-              <div>Total Deposit ETH Amount: <span class="bg-green-100 text-green-800 text-sm font-medium me-2 px-1.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300 ml-2">{totalDeposits} ETH</span></div>
-              <div className='mt-1'>Claiming Contract Token Balance: <span class="bg-green-100 text-green-800 text-sm font-medium me-2 px-1.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300 ml-2">{claimingTokenBalance} {symbol}</span></div>
+              <div>Total Deposit ETH Amount: <span className="bg-green-100 text-green-800 text-sm font-medium me-2 px-1.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300 ml-2">{totalDeposits} ETH</span></div>
+              <div className='mt-1'>Claiming Contract Token Balance: <span className="bg-green-100 text-green-800 text-sm font-medium me-2 px-1.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300 ml-2">{claimingTokenBalance} {symbol}</span></div>
             </div>
             <div className='flex mt-4'>
               <input
@@ -452,7 +475,7 @@ export const Liquidity = () => {
                 onChange={e => setPairAddress(e.target.value)}
                 placeholder='Pool Address (0x..)'
               />
-              <button type="button" class="text-white bg-gradient-to-r from-purple-500 to-pink-500 hover:bg-gradient-to-l focus:ring-4 focus:outline-none focus:ring-purple-200 dark:focus:ring-purple-800 font-medium rounded-lg text-md px-4 py-2.5 text-center ml-2" onClick={listLiquidity}>List Liquidity</button>
+              <button type="button" className="text-white bg-gradient-to-r from-purple-500 to-pink-500 hover:bg-gradient-to-l focus:ring-4 focus:outline-none focus:ring-purple-200 dark:focus:ring-purple-800 font-medium rounded-lg text-md px-4 py-2.5 text-center ml-2" onClick={listLiquidity}>List Liquidity</button>
             </div>
           </>
         ): <></>
