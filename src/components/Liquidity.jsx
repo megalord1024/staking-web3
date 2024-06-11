@@ -30,8 +30,8 @@ export const Liquidity = () => {
   const [ depositStart, setDepositStart ] = useState('');
   const [ updateDepositStart, setUpdateDepositStart ] = useState('');
   const [ updateRewardStartDate, setUpdateRewardStartDate ] = useState('');
-  const [ rewardPeriod, setRewardPeriod ] = useState('');
-  const [ rewardTotalAmount, setRewardTotalAmount ] = useState('');
+  const [ updateRewardPeriod, setUpdateRewardPeriod ] = useState('');
+  const [ updateRewardTotalAmount, setUpdateRewardTotalAmount ] = useState('');
 
   const [ depositAmount, setDepositAmount ] = useState('');
   const [ totalDepositAmount, setTotalDepositAmount ] = useState('');
@@ -188,6 +188,20 @@ export const Liquidity = () => {
   async function getRewardStates() {
     const ethersProvider = new BrowserProvider(walletProvider);
     const signer = await ethersProvider.getSigner();
+    const LiquidityContract = new Contract(LiquidityAddress, LiquidityJSON.abi, signer);
+
+    try {
+      const startDay = await LiquidityContract.startDay();
+      const rewardPeriod = await LiquidityContract.rewardPeriod();
+      const totalReward = await LiquidityContract.totalReward();
+
+    } catch (error) {
+      let message = error;
+      if (error.reason) message = error.reason;
+
+      alert(message);
+      console.log(error);
+    }
   }
 
   async function setRewardStates() {
@@ -198,7 +212,7 @@ export const Liquidity = () => {
 
     try {
       const LiquidityContract = new Contract(LiquidityAddress, LiquidityJSON.abi, signer);
-      const trx = await LiquidityContract.setRewardStates(rewardStartDate, rewardPeriod, rewardTotalAmount);
+      const trx = await LiquidityContract.setRewardStates(rewardStartDate, updateRewardPeriod, updateRewardTotalAmount);
 
       trx.wait().then(async receipt => {
         if (receipt && receipt.status == 1) {
@@ -411,7 +425,7 @@ export const Liquidity = () => {
                 <input
                   type="number"
                   className="block w-64 p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500"
-                  onChange={e => setRewardPeriod(e.target.value)}
+                  onChange={e => setUpdateRewardPeriod(e.target.value)}
                   placeholder="Enter the amount of token to stake"
                 />
               </div>
@@ -421,7 +435,7 @@ export const Liquidity = () => {
                   <input
                     type="number"
                     className="block w-64 p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500"
-                    onChange={e => setRewardTotalAmount(e.target.value)}
+                    onChange={e => setUpdateRewardTotalAmount(e.target.value)}
                     placeholder="Enter the amount of token to stake"
                   />
                   <button className="ml-4 py-2 px-4 bg-blue-700 hover:bg-blue-500 rounded text-white" onClick={setRewardStates}>Set Reward States</button>
