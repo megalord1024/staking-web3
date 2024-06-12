@@ -7,16 +7,10 @@ import ClaimingJSON from '../artifacts/ClaimingABI.json';
 import StakingJSON from '../artifacts/StakingABI.json';
 import LiquidityJSON from '../artifacts/LiquidityMiningABI.json';
 
-// const TokenAddress = '0x2eBECAf092BC7251d1d6EB18102885d421780263';
-// const ClaimingAddress = '0xacCcE71d97a81CDb25B7e97D2e7190E6f64e6dd6';
-// const StakingAddress = '0xAe1ba1B8D587d22A668405Ab8237158a08E7981a';
-
-const TokenAddress = '0x8c06e9fb6C8254917a13133F490BBd6680408948';
-const StakingAddress = '0x671Fe65F0721574CFc3594CCf91ACB7A8a55433e';
-const ClaimingAddress = '0x89b77621559290D9C0535A142A29027f7bB31BAC';
-// const LiquidityAddress = '0xfE9BA5d5fb2909Fffec58e928437FD52DC05ffd0';
-// const LiquidityAddress = '0xe7986D07D865208ABb4fdE4bCE25017CFFD546ce';
-const LiquidityAddress = '0x636372c9aB49202Ce7A47E4f2CA52400C029E679';
+const TokenAddress = '0xE7981188f8D10DAB0aba03C1974E496CE83E2876';
+const StakingAddress = '0x972C502f170b0CE1e4F33aF179d3bB6Cc188Cd16';
+const ClaimingAddress = '0xE097A30Ba2c5737e0d9b73603e91c600DBf4a8Dc';
+const LiquidityAddress = '0x2DEadC133aAA4c30D95FDA4C2Bb003E673487F94';
 
 
 export const Liquidity = () => {
@@ -35,6 +29,7 @@ export const Liquidity = () => {
   const [ rewardStartDate, setRewardStartDate ] = useState('');
   const [ rewardPeriod, setRewardPeriod ] = useState('');
   const [ rewardTotalAmount, setRewardTotalAmount ] = useState('');
+  const [ claimableRewardAmount, setClaimableRewardAmount ] = useState('');
 
   const [ depositAmount, setDepositAmount ] = useState('');
   const [ totalDepositAmount, setTotalDepositAmount ] = useState('');
@@ -62,6 +57,7 @@ export const Liquidity = () => {
   // get deposits array
   useEffect(() => {
     getUserDepositsArray();
+    getClaimableRewardAmount();
   }, [isConnected, address, chainId]);
 
   async function getTokenDecimals() {
@@ -189,6 +185,28 @@ export const Liquidity = () => {
     }
   }
 
+  async function getClaimableRewardAmount() {
+    if (!isConnected || !address) return;
+
+    const ethersProvider = new BrowserProvider(walletProvider);
+    const signer = await ethersProvider.getSigner();
+    const LiquidityContract = new Contract(LiquidityAddress, LiquidityJSON.abi, signer);
+
+    try {
+      const returns = await LiquidityContract.getRewardTokenAmount(address);
+
+      console.log(returns.rewardAmount);
+
+      setClaimableRewardAmount(returns.rewardAmount);
+    } catch (error) {
+      let message = error;
+      if (error.reason) message = error.reason;
+
+      alert(message);
+      console.log(error);
+    }
+  }
+
   async function getRewardStates() {
     const ethersProvider = new BrowserProvider(walletProvider);
     const signer = await ethersProvider.getSigner();
@@ -251,6 +269,7 @@ export const Liquidity = () => {
         if (receipt && receipt.status == 1) {
           getUserTotalDeposit();
           getUserDepositsArray();
+          getClaimableRewardAmount();
         }
       });
     } catch (error) {
@@ -274,6 +293,7 @@ export const Liquidity = () => {
         if (receipt && receipt.status == 1) {
           getUserTotalDeposit();
           getUserDepositsArray();
+          getClaimableRewardAmount();
         }
       });
     } catch (error) {
@@ -413,6 +433,7 @@ export const Liquidity = () => {
         <div className='mt-3'>Reward period starts from: <span className="font-bold">{convertDate(rewardStartDate)}</span></div>
         <div className='mt-3'>Reward period ends at: <span className="font-bold">{convertDate(rewardStartDate + 86400 * Number(rewardPeriod))}</span></div>
         <div className='mt-3'>Reward Total Amount: <span className="font-bold"> <span className="bg-green-100 text-green-800 text-sm font-medium me-2 px-1.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300 ml-2">{rewardTotalAmount > 0 ? formatUnits(rewardTotalAmount, decimals) : 0} {symbol}</span></span></div>
+        <div className='mt-3'>Claimable Reward Amount: <span className="font-bold"> <span className="bg-green-100 text-green-800 text-sm font-medium me-2 px-1.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300 ml-2">{claimableRewardAmount > 0 ? formatUnits(claimableRewardAmount, decimals) : 0} {symbol}</span></span></div>
       </div>
       {
         liquidityContractOwner != '' && liquidityContractOwner == address ? (
