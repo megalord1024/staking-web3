@@ -5,14 +5,10 @@ import TokenJSON from '../artifacts/TokenABI.json';
 import ClaimingJSON from '../artifacts/ClaimingABI.json';
 import StakingJSON from '../artifacts/StakingABI.json';
 
-// const TokenAddress = '0x2eBECAf092BC7251d1d6EB18102885d421780263';
-// const ClaimingAddress = '0xacCcE71d97a81CDb25B7e97D2e7190E6f64e6dd6';
-// const StakingAddress = '0xAe1ba1B8D587d22A668405Ab8237158a08E7981a';
-
-const TokenAddress = '0x8c06e9fb6C8254917a13133F490BBd6680408948';
-const StakingAddress = '0x671Fe65F0721574CFc3594CCf91ACB7A8a55433e';
-const ClaimingAddress = '0x89b77621559290D9C0535A142A29027f7bB31BAC';
-const LiquidityAddress = '0xfE9BA5d5fb2909Fffec58e928437FD52DC05ffd0';
+const TokenAddress = '0xE7981188f8D10DAB0aba03C1974E496CE83E2876';
+const StakingAddress = '0x972C502f170b0CE1e4F33aF179d3bB6Cc188Cd16';
+const ClaimingAddress = '0xE097A30Ba2c5737e0d9b73603e91c600DBf4a8Dc';
+const LiquidityAddress = '0x2DEadC133aAA4c30D95FDA4C2Bb003E673487F94';
 
 
 export const Claiming = () => {
