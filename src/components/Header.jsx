@@ -5,7 +5,7 @@ import {
 import { Outlet, Link } from "react-router-dom";
 
 // 1. Get projectId
-const projectId = "a627aa841f7924b83dfd55ecfae12ea3"
+const projectId = "59094f49d13b1b33232b2fcaedf72a75"
 if (!projectId) {
   throw new Error('VITE_PROJECT_ID is not set')
 }
@@ -29,7 +29,7 @@ const ethersConfig = defaultConfig({
     icons: ['https://avatars.githubusercontent.com/u/37784886']
   },
   enableEmail: true,
-  defaultChainId: 1,
+  defaultChainId: 11155111,
   rpcUrl: 'https://cloudflare-eth.com'
 });
 
