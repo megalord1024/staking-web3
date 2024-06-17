@@ -195,8 +195,6 @@ export const Liquidity = () => {
     try {
       const returns = await LiquidityContract.getRewardTokenAmount(address);
 
-      console.log(returns.rewardAmount);
-
       setClaimableRewardAmount(returns.rewardAmount);
     } catch (error) {
       let message = error;
