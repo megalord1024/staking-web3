@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers/react';
-import { BrowserProvider, Contract, formatUnits } from 'ethers';
+import { BrowserProvider, Contract, formatUnits, parseUnits } from 'ethers';
 import TokenJSON from '../artifacts/TokenABI.json';
 import ClaimingJSON from '../artifacts/ClaimingABI.json';
 import StakingJSON from '../artifacts/StakingABI.json';
@@ -367,9 +367,7 @@ export const Claiming = () => {
 
     try {
       const ClaimingContract = new Contract(ClaimingAddress, ClaimingJSON.abi, signer);
-      const DECIMAL = Math.pow(Number(10), Number(decimals));
-      let amount = Number(claimInfoAmount) * DECIMAL;
-      const trx = await ClaimingContract.setClaim(claimInfoAddress, amount.toString());
+      const trx = await ClaimingContract.setClaim(claimInfoAddress, parseUnits(String(claimInfoAmount), Number(decimals)));
 
       trx.wait().then(async receipt => {
         if (receipt && receipt.status == 1) {

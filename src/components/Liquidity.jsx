@@ -99,9 +99,13 @@ export const Liquidity = () => {
 
     try {
       const LiquidityContract = new Contract(LiquidityAddress, LiquidityJSON.abi, signer);
-      await LiquidityContract.setDepositStart(data);
+      const trx = await LiquidityContract.setDepositStart(data);
 
-      getDepositStart();
+      trx.wait().then(async receipt => {
+        if (receipt && receipt.status == 1) {
+          getDepositStart();
+        }
+      });
     } catch (error) {
       let message = error;
       if (error.reason) message = error.reason;
