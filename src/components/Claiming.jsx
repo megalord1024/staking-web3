@@ -10,7 +10,7 @@ import { shortenAddress } from '../utils';
 console.log(process.env.REACT_APP_BACKEND_ENDPOINT);
 
 const TokenAddress = '0xE7981188f8D10DAB0aba03C1974E496CE83E2876';
-const StakingAddress = '0x972C502f170b0CE1e4F33aF179d3bB6Cc188Cd16';
+const StakingAddress = '0x6673309df891012A7B58aa1Ce2b44970aA722676';
 const ClaimingAddress = '0xE097A30Ba2c5737e0d9b73603e91c600DBf4a8Dc';
 const LiquidityAddress = '0x2DEadC133aAA4c30D95FDA4C2Bb003E673487F94';
 
@@ -42,8 +42,13 @@ export const Claiming = () => {
 
   // get staking amount
   useEffect(() => {
+    setPage(1);
     getStakingArray();
   }, [isConnected, address, chainId]);
+
+  useEffect(() => {
+    getStakingArray();
+  }, [page, limit]);
 
   // get staking enabled status, token decimals
   useEffect(() => {
@@ -128,13 +133,23 @@ export const Claiming = () => {
       return;
     }
 
-    const data = await getStakes({
-      user: address,
-      page: page,
-      limit: limit
-    });
+    const ethersProvider = new BrowserProvider(walletProvider);
+    const signer = await ethersProvider.getSigner();
+    const StakingContract = new Contract(StakingAddress, StakingJSON.abi, signer);
 
-    setStakingArray(data || []);
+    try {
+      const fromIndex = (Number(page) - 1) * Number(limit);
+      const toIndex = Number(page) * Number(limit) - 1;
+      const data = await StakingContract.getStakeInfoArray(address, fromIndex, toIndex);
+      
+      setStakingArray(data || []);
+    } catch (error) {
+      let message = error;
+      if (error.reason) message = error.reason;
+
+      alert(message);
+      console.log(error);
+    }
   }
 
   async function claimToken() {
@@ -414,13 +429,39 @@ export const Claiming = () => {
     return [date, month, year].join('/') + ' '+ [hours, minutes, seconds].join(':');
   }
 
-  function calcRemainingLockDay(from, durationInMonth) {
+  function calcRemainingLockDay(item) {
     const now = Math.floor(new Date().getTime() / 1000);
-    const remain = Math.max((from + durationInMonth * 30 * 86400) - now, 0);
+    const remain = Math.max(Number(item.lockEnd) - now, 0);
     if (remain == 0) return 'End';
     const remainDays = Math.floor(remain / 86400);
     const remainHours = Math.floor((remain - remainDays * 86400) / 3600);
     return (remainHours > 0 ? `${remainDays} days ` : '') + `${remainHours} hours`;
+  }
+
+  function getDurationMonth(item) {
+    return Math.round((Number(item.lockEnd) - Number(item.lockOn)) / (30 * 86400));
+  }
+
+  function getAPYFromMonth(item) {
+    const duration = Math.round((Number(item.lockEnd) - Number(item.lockOn)) / (30 * 86400));
+    let apy = 0;
+    switch(duration) {
+      case 3:
+        apy = 10;
+        break;
+      case 6:
+        apy = 25;
+        break;
+      case 9:
+        apy = 35;
+        break;
+      case 12:
+        apy = 50;
+        break;
+      default:
+        break;
+    }
+    return apy;
   }
 
   return(
@@ -525,7 +566,7 @@ export const Claiming = () => {
                 <th scope="col" className="px-6 py-3">Remaining</th>
                 <th scope="col" className="px-6 py-3">APY</th>
                 <th scope="col" className="px-6 py-3">Reward</th>
-                <th scope="col" className="px-6 py-3">Trx Hash</th>
+                {/* <th scope="col" className="px-6 py-3">Trx Hash</th> */}
                 <th scope="col" className="px-6 py-3"></th>
               </tr>
             </thead>
@@ -535,38 +576,38 @@ export const Claiming = () => {
                   return (
                     <tr className="bg-white border-b text-center font-medium text-gray-900 whitespace-nowrap" key={index}>
                       <td className="px-6 py-3">
-                        { index + 1 }
+                        { (Number(page) - 1) * Number(limit) + index + 1 }
                       </td>
                       <td className="px-6 py-3">
                         { formatUnits(String(item.amount), decimals) } {symbol}
                       </td>
                       <td className="px-6 py-3">
-                        { convertDate(item.staked_on) }
+                        { convertDate(item.lockOn) }
                       </td>
                       <td className="px-6 py-3">
-                        { item.duration } Months
+                        { getDurationMonth(item) } Months
                       </td>
                       <td className="px-6 py-3">
-                        { calcRemainingLockDay(item.staked_on, item.duration) }
+                        { calcRemainingLockDay(item) }
                       </td>
                       <td className="px-6 py-3">
-                        { item.apy } %
+                        { getAPYFromMonth(item) } %
                       </td>
                       <td className="px-6 py-3">
                         { formatUnits(String(item.rewards), decimals) } {symbol}
                       </td>
-                      <td className="px-6 py-3">
+                      {/* <td className="px-6 py-3">
                         { shortenAddress(item.trx_hash) }
-                      </td>
+                      </td> */}
                       <td className="px-6 py-3">
                         {
                           Number(item.amount) > 0 ? (
-                            <button className='text-white bg-gradient-to-br from-pink-500 to-orange-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-pink-200 dark:focus:ring-pink-800 font-medium rounded-lg text-xs px-2 py-1 text-center' onClick={() => withdrawStake(item.index)}>Withdraw</button>
+                            <button className='text-white bg-gradient-to-br from-pink-500 to-orange-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-pink-200 dark:focus:ring-pink-800 font-medium rounded-lg text-xs px-2 py-1 text-center' onClick={() => withdrawStake((Number(page) - 1) * Number(limit) + index)}>Withdraw</button>
                           ) : <></>
                         }
                         {
                           Number(item.rewards) > 0 ? (
-                            <button className='text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-xs px-2 py-1 text-center ml-1' onClick={() => claimRewards(item.index)}>Rewards</button>
+                            <button className='text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-xs px-2 py-1 text-center ml-1' onClick={() => claimRewards((Number(page) - 1) * Number(limit) + index)}>Rewards</button>
                           ) : <></>
                         }
                       </td>
