@@ -10,7 +10,7 @@ import { shortenAddress } from '../utils';
 console.log(process.env.REACT_APP_BACKEND_ENDPOINT);
 
 const TokenAddress = '0xE7981188f8D10DAB0aba03C1974E496CE83E2876';
-const StakingAddress = '0x6673309df891012A7B58aa1Ce2b44970aA722676';
+const StakingAddress = '0xe5f438191cA1C051373239748BF8E0cd55155A3E';
 const ClaimingAddress = '0xE097A30Ba2c5737e0d9b73603e91c600DBf4a8Dc';
 const LiquidityAddress = '0x2DEadC133aAA4c30D95FDA4C2Bb003E673487F94';
 
@@ -18,27 +18,27 @@ export const Claiming = () => {
   const { address, chainId, isConnected } = useWeb3ModalAccount();
   const { walletProvider } = useWeb3ModalProvider();
 
-  const [ decimals, setDecimals ] = useState(0);
-  const [ symbol, setSymbol ] = useState('');
+  const [decimals, setDecimals] = useState(0);
+  const [symbol, setSymbol] = useState('');
 
-  const [ claimContractOwner, setClaimContractOwner ] = useState('');
-  const [ claimStart, setClaimStart ] = useState('');
-  const [ updateClaimStart, setUpdateClaimStart ] = useState('');
-  const [ claimInfoAmount, setClaimInfoAmount ] = useState('');
-  const [ claimInfoAddress, setClaimInfoAddress ] = useState('');
-  const [ claimAmount, setClaimAmount ] = useState('');
-  const [ claimableAmount, setClaimableAmount ] = useState('');
-  const [ stakeFromClaimingAmount, setStakeFromClaimingAmount ] = useState('');
-  const [ durationFromClaiming, setDurationFromClaiming ] = useState('');
+  const [claimContractOwner, setClaimContractOwner] = useState('');
+  const [claimStart, setClaimStart] = useState('');
+  const [updateClaimStart, setUpdateClaimStart] = useState('');
+  const [claimInfoAmount, setClaimInfoAmount] = useState('');
+  const [claimInfoAddress, setClaimInfoAddress] = useState('');
+  const [claimAmount, setClaimAmount] = useState('');
+  const [claimableAmount, setClaimableAmount] = useState('');
+  const [stakeFromClaimingAmount, setStakeFromClaimingAmount] = useState('');
+  const [durationFromClaiming, setDurationFromClaiming] = useState('');
 
-  const [ tokenBalance, setTokenBalance ] = useState('');
-  const [ stakingEnabled, setStakingEnabled ] = useState(false);
-  const [ stakeAmount, setStakeAmount ] = useState('');
-  const [ duration, setDuration ] = useState('');
-  const [ stakingArray, setStakingArray ] = useState([]);
+  const [tokenBalance, setTokenBalance] = useState('');
+  const [stakingEnabled, setStakingEnabled] = useState(false);
+  const [stakeAmount, setStakeAmount] = useState('');
+  const [duration, setDuration] = useState('');
+  const [stakingArray, setStakingArray] = useState([]);
 
-  const [ page, setPage ] = useState(1);
-  const [ limit, setLimit ] = useState(10);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
   // get staking amount
   useEffect(() => {
@@ -114,7 +114,7 @@ export const Claiming = () => {
 
     const ClaimingContract = new Contract(ClaimingAddress, ClaimingJSON.abi, signer);
     const claimStart = await ClaimingContract.claimStart();
-    
+
     setClaimStart(claimStart);
   }
 
@@ -141,7 +141,7 @@ export const Claiming = () => {
       const fromIndex = (Number(page) - 1) * Number(limit);
       const toIndex = Number(page) * Number(limit) - 1;
       const data = await StakingContract.getStakeInfoArray(address, fromIndex, toIndex);
-      
+
       setStakingArray(data || []);
     } catch (error) {
       let message = error;
@@ -223,7 +223,7 @@ export const Claiming = () => {
             apy: 10,
             trx_hash: receipt.hash
           }
-          
+
           recordStakeInfo(address, data);
         }
       });
@@ -263,7 +263,7 @@ export const Claiming = () => {
       amount = Number(stakeAmount) * DECIMAL;
 
       await TokenContract.approve(StakingAddress, amount.toString());
-    } catch(error) {
+    } catch (error) {
       alert(error);
     }
 
@@ -298,7 +298,7 @@ export const Claiming = () => {
           getStakingArray();
         }
       });
-    } catch(error) {
+    } catch (error) {
       let message = error;
       if (error.reason) message = error.reason;
 
@@ -323,7 +323,7 @@ export const Claiming = () => {
           getStakingArray();
         }
       });
-    } catch(error) {
+    } catch (error) {
       let message = error;
       if (error.reason) message = error.reason;
 
@@ -334,7 +334,7 @@ export const Claiming = () => {
 
   async function updateClaimStartDate() {
     const data = Math.floor(new Date(updateClaimStart).getTime() / 1000);
-    
+
     const ethersProvider = new BrowserProvider(walletProvider);
     const signer = await ethersProvider.getSigner();
 
@@ -361,7 +361,7 @@ export const Claiming = () => {
       alert("Please connect wallet");
       return;
     }
-    
+
     const ethersProvider = new BrowserProvider(walletProvider);
     const signer = await ethersProvider.getSigner();
 
@@ -400,7 +400,7 @@ export const Claiming = () => {
       data.staked_on = Number(response[1]);
       data.rewards = Number(response[3]);
       const apiResponse = await createStake(data);
-    } catch(error) {
+    } catch (error) {
       console.log("Failed to record stake info:", error);
     }
   }
@@ -420,13 +420,13 @@ export const Claiming = () => {
 
     x = new Date(Number(x) * 1000);
     const date = x.getDate().toString().padStart(2, 0);
-    const month = (x.getMonth()+1).toString().padStart(2, 0);
+    const month = (x.getMonth() + 1).toString().padStart(2, 0);
     const year = x.getFullYear().toString();
 
     const hours = x.getHours().toString().padStart(2, 0);
     const minutes = x.getMinutes().toString().padStart(2, 0);
     const seconds = x.getSeconds().toString().padStart(2, 0);
-    return [date, month, year].join('/') + ' '+ [hours, minutes, seconds].join(':');
+    return [date, month, year].join('/') + ' ' + [hours, minutes, seconds].join(':');
   }
 
   function calcRemainingLockDay(item) {
@@ -445,7 +445,7 @@ export const Claiming = () => {
   function getAPYFromMonth(item) {
     const duration = Math.round((Number(item.lockEnd) - Number(item.lockOn)) / (30 * 86400));
     let apy = 0;
-    switch(duration) {
+    switch (duration) {
       case 3:
         apy = 10;
         break;
@@ -464,12 +464,12 @@ export const Claiming = () => {
     return apy;
   }
 
-  return(
+  return (
     <main className="py-12 px-24">
       <div>
         <div className='flex items-center'>
-          <div className={(claimStarted() ? `bg-green-800`:`bg-red-800`)+` rounded-full w-4 h-4 mr-3`}></div>
-          { claimStarted() ? <span className="text-lg font-bold">Claiming is enabled.</span> : <span className="text-lg font-bold">Claiming is Disabled</span> }
+          <div className={(claimStarted() ? `bg-green-800` : `bg-red-800`) + ` rounded-full w-4 h-4 mr-3`}></div>
+          {claimStarted() ? <span className="text-lg font-bold">Claiming is enabled.</span> : <span className="text-lg font-bold">Claiming is Disabled</span>}
           <span className="mx-4">|</span>
           <div>Claiming is available from: <span className="font-bold">{convertDate(claimStart)}</span></div>
         </div>
@@ -481,7 +481,7 @@ export const Claiming = () => {
             <label className="block mb-2 text-sm font-medium text-gray-900">Claim Amount</label>
             <div className='flex'>
               <input
-                type = "number"
+                type="number"
                 className="block w-64 p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500"
                 onChange={e => setClaimAmount(e.target.value)}
                 placeholder='Enter the amount of token to claim'
@@ -522,8 +522,8 @@ export const Claiming = () => {
       <hr className="my-5" />
       <div>
         <div className='flex items-center'>
-          <div className={(stakingEnabled ? `bg-green-800`:`bg-red-800`)+` rounded-full w-4 h-4 mr-3`}></div>
-          { stakingEnabled ? <span className="text-lg font-bold">Staking is Enabled</span> : <span className="text-lg font-bold">Staking is Disabled</span> }
+          <div className={(stakingEnabled ? `bg-green-800` : `bg-red-800`) + ` rounded-full w-4 h-4 mr-3`}></div>
+          {stakingEnabled ? <span className="text-lg font-bold">Staking is Enabled</span> : <span className="text-lg font-bold">Staking is Disabled</span>}
           <span className="mx-4">|</span>
           <div>Token Balance: <span className="font-bold">{tokenBalance !== undefined ? tokenBalance : ''}</span> {symbol}</div>
         </div>
@@ -576,25 +576,25 @@ export const Claiming = () => {
                   return (
                     <tr className="bg-white border-b text-center font-medium text-gray-900 whitespace-nowrap" key={index}>
                       <td className="px-6 py-3">
-                        { (Number(page) - 1) * Number(limit) + index + 1 }
+                        {(Number(page) - 1) * Number(limit) + index + 1}
                       </td>
                       <td className="px-6 py-3">
-                        { formatUnits(String(item.amount), decimals) } {symbol}
+                        {formatUnits(String(item.amount), decimals)} {symbol}
                       </td>
                       <td className="px-6 py-3">
-                        { convertDate(item.lockOn) }
+                        {convertDate(item.lockOn)}
                       </td>
                       <td className="px-6 py-3">
-                        { getDurationMonth(item) } Months
+                        {getDurationMonth(item)} Months
                       </td>
                       <td className="px-6 py-3">
-                        { calcRemainingLockDay(item) }
+                        {calcRemainingLockDay(item)}
                       </td>
                       <td className="px-6 py-3">
-                        { getAPYFromMonth(item) } %
+                        {getAPYFromMonth(item)} %
                       </td>
                       <td className="px-6 py-3">
-                        { formatUnits(String(item.rewards), decimals) } {symbol}
+                        {formatUnits(String(item.rewards), decimals)} {symbol}
                       </td>
                       {/* <td className="px-6 py-3">
                         { shortenAddress(item.trx_hash) }
@@ -617,6 +617,26 @@ export const Claiming = () => {
               }
             </tbody>
           </table>
+          <div className='flex mt-3 items-center justify-end'>
+            <span>Page: </span> 
+            <input
+              type="number"
+              className="block w-12 px-2 py-1 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 ml-1"
+              onChange={e => setPage(e.target.value)}
+              value={page}
+            />
+            <span className='ml-2'>Per page: </span> 
+            <select
+              className="block w-24 px-2 py-1 bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-blue-500 focus:border-blue-500 ml-1"
+              defaultValue="10"
+              onChange={e => setLimit(e.target.value)}
+            >
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+          </div>
         </div>
       </div>
       {
@@ -639,7 +659,7 @@ export const Claiming = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className='flex mt-4'>
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-900">Address to set claim info</label>
@@ -664,7 +684,7 @@ export const Claiming = () => {
               </div>
             </div>
           </>
-        ): <></>
+        ) : <></>
       }
     </main>
   )
