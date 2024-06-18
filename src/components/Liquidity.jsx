@@ -8,7 +8,7 @@ import StakingJSON from '../artifacts/StakingABI.json';
 import LiquidityJSON from '../artifacts/LiquidityMiningABI.json';
 
 const TokenAddress = '0xE7981188f8D10DAB0aba03C1974E496CE83E2876';
-const StakingAddress = '0x6673309df891012A7B58aa1Ce2b44970aA722676';
+const StakingAddress = '0xe5f438191cA1C051373239748BF8E0cd55155A3E';
 const ClaimingAddress = '0xE097A30Ba2c5737e0d9b73603e91c600DBf4a8Dc';
 const LiquidityAddress = '0x2DEadC133aAA4c30D95FDA4C2Bb003E673487F94';
 
@@ -99,9 +99,13 @@ export const Liquidity = () => {
 
     try {
       const LiquidityContract = new Contract(LiquidityAddress, LiquidityJSON.abi, signer);
-      await LiquidityContract.setDepositStart(data);
+      const trx = await LiquidityContract.setDepositStart(data);
 
-      getDepositStart();
+      trx.wait().then(async receipt => {
+        if (receipt && receipt.status == 1) {
+          getDepositStart();
+        }
+      });
     } catch (error) {
       let message = error;
       if (error.reason) message = error.reason;
