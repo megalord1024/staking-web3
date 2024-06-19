@@ -271,6 +271,7 @@ export const Liquidity = () => {
         if (receipt && receipt.status == 1) {
           getUserTotalDeposit();
           getUserDepositsArray();
+          getTotalDepositAmount();
           getClaimableRewardAmount();
         }
       });
@@ -307,8 +308,53 @@ export const Liquidity = () => {
     }
   }
 
-  async function listLiquidity() {
+  async function claimReward() {
+    const ethersProvider = new BrowserProvider(walletProvider);
+    const signer = await ethersProvider.getSigner();
 
+    try {
+      const LiquidityContract = new Contract(LiquidityAddress, LiquidityJSON.abi, signer);
+      const trx = await LiquidityContract.claimReward();
+
+      trx.wait().then(async receipt => {
+        if (receipt && receipt.status == 1) {
+          getClaimableRewardAmount();
+        }
+      });
+    } catch (error) {
+      let message = error;
+      if (error.reason) message = error.reason;
+
+      alert(message);
+      console.log(error);
+    }
+  }
+
+  async function listLiquidity() {
+    if (!isConnected) return;
+    if (!pairAddress) {
+      alert("Please input pair address");
+      return;
+    }
+    const ethersProvider = new BrowserProvider(walletProvider);
+    const signer = await ethersProvider.getSigner();
+
+    try {
+      const LiquidityContract = new Contract(LiquidityAddress, LiquidityJSON.abi, signer);
+      const trx = await LiquidityContract.listLiquidity(pairAddress);
+
+      trx.wait().then(async receipt => {
+        if (receipt && receipt.status == 1) {
+          getClaimingTokenBalance();
+        }
+      });
+    } catch (error) {
+      let message = error;
+      if (error.reason) message = error.reason;
+
+      alert(message);
+      console.log(error);
+    }
   }
 
   function depositStarted() {
@@ -436,11 +482,12 @@ export const Liquidity = () => {
         <div className='mt-3'>Reward period ends at: <span className="font-bold">{convertDate(rewardStartDate + 86400 * Number(rewardPeriod))}</span></div>
         <div className='mt-3'>Reward Total Amount: <span className="font-bold"> <span className="bg-green-100 text-green-800 text-sm font-medium me-2 px-1.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300 ml-2">{rewardTotalAmount > 0 ? formatUnits(rewardTotalAmount, decimals) : 0} {symbol}</span></span></div>
         <div className='mt-3'>Claimable Reward Amount: <span className="font-bold"> <span className="bg-green-100 text-green-800 text-sm font-medium me-2 px-1.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300 ml-2">{claimableRewardAmount > 0 ? formatUnits(claimableRewardAmount, decimals) : 0} {symbol}</span></span></div>
+        <button type="button" className="text-white bg-gradient-to-r from-purple-500 to-pink-500 hover:bg-gradient-to-l focus:ring-4 focus:outline-none focus:ring-purple-200 dark:focus:ring-purple-800 font-medium rounded-lg text-md px-4 py-2.5 text-center mt-2" onClick={claimReward}>Claim Reward</button>
       </div>
+      <hr className="my-5" />
       {
         liquidityContractOwner != '' && liquidityContractOwner == address ? (
           <>
-            <hr className="my-5" />
             <div className="text-lg font-bold my-4">LiquidityMining Contract Owner Functions</div>
             <div>
               <div className='flex mt-4'>
