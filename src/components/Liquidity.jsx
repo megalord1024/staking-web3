@@ -58,6 +58,7 @@ export const Liquidity = () => {
 
   useEffect(() => {
     getClaimingTokenBalance();
+    getTokenBalance();
   }, [isConnected, decimals]);
 
   // get deposits array
@@ -380,6 +381,7 @@ export const Liquidity = () => {
       trx.wait().then(async receipt => {
         if (receipt && receipt.status == 1) {
           getClaimingTokenBalance();
+          getListedTime();
         }
       });
     } catch (error) {
