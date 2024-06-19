@@ -30,6 +30,7 @@ export const Liquidity = () => {
   const [ rewardPeriod, setRewardPeriod ] = useState('');
   const [ rewardTotalAmount, setRewardTotalAmount ] = useState('');
   const [ claimableRewardAmount, setClaimableRewardAmount ] = useState('');
+  const [ listedTime, setListedTime ] = useState('');
 
   const [ depositAmount, setDepositAmount ] = useState('');
   const [ totalDepositAmount, setTotalDepositAmount ] = useState('');
@@ -37,6 +38,9 @@ export const Liquidity = () => {
   const [ totalDeposits, setTotalDeposits ] = useState(0);
   const [ claimingTokenBalance, setClaimingTokenBalance ] = useState(0);
   const [ pairAddress, setPairAddress ] = useState('');
+  const [ addLiquidityETHAmount, setAddLiquidityETHAmount ] = useState('');
+  const [ addLiquidityTokenAmount, setAddLiquidityTokenAmount ] = useState('');
+  const [ tokenBalance, setTokenBalance ] = useState('');
 
   // get staking enabled status, token decimals
   useEffect(() => {
@@ -48,6 +52,8 @@ export const Liquidity = () => {
     getUserTotalDeposit();
     getTotalDepositAmount();
     getRewardStates();
+    getListedTime();
+    getTokenBalance();
   }, [isConnected]);
 
   useEffect(() => {
@@ -69,6 +75,16 @@ export const Liquidity = () => {
     const symbol = await TokenContract.symbol();
     setDecimals(tokenDecimals);
     setSymbol(symbol);
+  }
+  
+  async function getTokenBalance() {
+    const ethersProvider = new BrowserProvider(walletProvider);
+    const signer = await ethersProvider.getSigner();
+
+    const TokenContract = new Contract(TokenAddress, TokenJSON.abi, signer);
+    const balance = await TokenContract.balanceOf(address);
+
+    setTokenBalance(formatUnits(balance, decimals));
   }
 
   async function getDepositStart() {
@@ -231,6 +247,24 @@ export const Liquidity = () => {
     }
   }
 
+  async function getListedTime() {
+    const ethersProvider = new BrowserProvider(walletProvider);
+    const signer = await ethersProvider.getSigner();
+    const LiquidityContract = new Contract(LiquidityAddress, LiquidityJSON.abi, signer);
+
+    try {
+      const listedTime = await LiquidityContract.listedTime();
+
+      setListedTime(listedTime);
+    } catch (error) {
+      let message = error;
+      if (error.reason) message = error.reason;
+
+      alert(message);
+      console.log(error);
+    }
+  }
+
   async function setRewardStates() {
     const startDate = Math.floor(new Date(updateRewardStartDate).getTime() / 1000);
     
@@ -357,6 +391,36 @@ export const Liquidity = () => {
     }
   }
 
+  async function addLiquidity() {
+    const ethersProvider = new BrowserProvider(walletProvider);
+    const signer = await ethersProvider.getSigner();
+
+    try {
+      const TokenContract = new Contract(TokenAddress, TokenJSON.abi, signer);
+      const LiquidityContract = new Contract(LiquidityAddress, LiquidityJSON.abi, signer);
+      const amount = parseUnits(String(addLiquidityTokenAmount), decimals);
+      await TokenContract.approve(LiquidityAddress, amount);
+      const trx = await LiquidityContract.addLiquidity(amount, {
+        value: parseEther(addLiquidityETHAmount)
+      });
+
+      trx.wait().then(async receipt => {
+        if (receipt && receipt.status == 1) {
+          getUserDepositsArray();
+          getTotalDepositAmount();
+          getClaimableRewardAmount();
+          getTokenBalance();
+        }
+      });
+    } catch (error) {
+      let message = error;
+      if (error.reason) message = error.reason;
+
+      alert(message);
+      console.log(error);
+    }
+  }
+
   function depositStarted() {
     if (depositStart == 0) return false;
 
@@ -409,12 +473,12 @@ export const Liquidity = () => {
                 type = "number"
                 className="block w-64 p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500"
                 onChange={e => setDepositAmount(e.target.value)}
-                placeholder='Enter the amount of token to claim'
+                placeholder='Enter the amount of ETH to deposit'
               />
               <button className="ml-4 py-2 px-4 bg-blue-700 hover:bg-blue-500 rounded text-white" onClick={depositETH}>Deposit</button>
             </div>
           </div>
-        </div>        
+        </div>
         <div className="mt-4">
           <table className="w-full text-sm text-left rtl:text-right text-gray-400 dark:text-gray-400">
             <thead className="text-xs text-gray-900 uppercase bg-gray-200 text-center">
@@ -470,6 +534,34 @@ export const Liquidity = () => {
               }
             </tbody>
           </table>
+        </div>
+      </div>
+      <hr className="my-5" />
+      <div>
+        <div className='flex items-center'>
+          <div className={(listedTime ? `bg-green-800`:`bg-red-800`)+` rounded-full w-4 h-4 mr-3`}></div>
+          { listedTime ? <span className="text-lg font-bold">Liquidity was listed at {convertDate(listedTime)}.</span> : <span className="text-lg font-bold">Liquidity isn't listed yet</span> }
+        </div>
+        <div className='mt-4'>Token Balance: <span className="bg-green-100 text-green-800 text-sm font-medium me-2 px-1.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300 ml-2">{tokenBalance} {symbol}</span></div>
+        <div className='flex mt-4'>
+          <div>
+            <label className="block mb-2 text-sm font-medium text-gray-900">Add liquidity amount</label>
+            <div className='flex'>
+              <input
+                type = "number"
+                className="block w-48 p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500"
+                onChange={e => setAddLiquidityETHAmount(e.target.value)}
+                placeholder='ETH amount to add liquidity'
+              />
+              <input
+                type = "number"
+                className="block w-48 p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 ml-2"
+                onChange={e => setAddLiquidityTokenAmount(e.target.value)}
+                placeholder='Token amount to add liquidity'
+              />
+              <button className="ml-4 py-2 px-4 bg-blue-700 hover:bg-blue-500 rounded text-white" onClick={addLiquidity}>Add Liquidity</button>
+            </div>
+          </div>
         </div>
       </div>
       <hr className="my-5" />
