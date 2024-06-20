@@ -58,12 +58,14 @@ export const Liquidity = () => {
 
   useEffect(() => {
     getClaimingTokenBalance();
+    getTokenBalance();
   }, [isConnected, decimals]);
 
   // get deposits array
   useEffect(() => {
     getUserDepositsArray();
     getClaimableRewardAmount();
+    getTokenBalance();
   }, [isConnected, address, chainId]);
 
   async function getTokenDecimals() {
@@ -78,6 +80,7 @@ export const Liquidity = () => {
   }
   
   async function getTokenBalance() {
+    if (!isConnected) return;
     const ethersProvider = new BrowserProvider(walletProvider);
     const signer = await ethersProvider.getSigner();
 
@@ -380,6 +383,7 @@ export const Liquidity = () => {
       trx.wait().then(async receipt => {
         if (receipt && receipt.status == 1) {
           getClaimingTokenBalance();
+          getListedTime();
         }
       });
     } catch (error) {
