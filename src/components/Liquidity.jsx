@@ -65,6 +65,7 @@ export const Liquidity = () => {
   useEffect(() => {
     getUserDepositsArray();
     getClaimableRewardAmount();
+    getTokenBalance();
   }, [isConnected, address, chainId]);
 
   async function getTokenDecimals() {
@@ -79,6 +80,7 @@ export const Liquidity = () => {
   }
   
   async function getTokenBalance() {
+    if (!isConnected) return;
     const ethersProvider = new BrowserProvider(walletProvider);
     const signer = await ethersProvider.getSigner();
 
