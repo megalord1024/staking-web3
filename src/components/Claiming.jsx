@@ -259,20 +259,23 @@ export const Claiming = () => {
     // The Contract object
     try {
       const TokenContract = new Contract(TokenAddress, TokenJSON.abi, signer);
+      const StakingContract = new Contract(StakingAddress, StakingJSON.abi, signer);
       const DECIMAL = Math.pow(Number(10), Number(decimals));
       amount = Number(stakeAmount) * DECIMAL;
 
-      await TokenContract.approve(StakingAddress, amount.toString());
-    } catch (error) {
-      alert(error);
-    }
+      const trx = await TokenContract.approve(StakingAddress, amount.toString());
 
-    try {
-      const StakingContract = new Contract(StakingAddress, StakingJSON.abi, signer);
-      await StakingContract.stake(amount.toString(), duration);
-
-      setStakeAmount('');
-      setDuration(0);
+      trx.wait().then(async receipt => {
+        if (receipt && receipt.status) {
+          const trx2 = await StakingContract.stake(amount.toString(), duration);
+          trx2.wait().then(async receipt2 => {
+            if (receipt2 && receipt2.status) {
+              getTokenBalance();
+              getStakingArray();
+            }
+          })
+        }
+      });
     } catch (error) {
       let message = error;
       if (error.reason) message = error.reason;
